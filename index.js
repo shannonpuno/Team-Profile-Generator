@@ -1,10 +1,10 @@
 const inquirer = require('inquirer');
 const fs = require('fs');
-const writeFile = require('./dist/index.html');
+
 
 const Employee = require('./lib/Employee');
 const Manager = require('./lib/Manager');
-const Engineer = require('./lib/Engineer)');
+const Engineer = require('./lib/Engineer');
 const Intern = require('./lib/Intern');
 
 const generateRoster = require('./src/templateHTML');
@@ -14,8 +14,12 @@ const teamArray = [];
 
 
 //starts application then prompts user to enter manager's info
+const init = () => {
+    addManager()
+}
+
 const addManager = () => {
-    return inquirer.prompt ([
+    inquirer.prompt ([
         {
             type: "input",
             name:"name",
@@ -46,7 +50,7 @@ const addManager = () => {
 
 //After user adds manager's info then user is presented with menu to finish building team w/ options to add intern or engineer.
 const buildTeam = () => {
-    return inquirer.prompt ([
+    inquirer.prompt ([
         {
             type:"list",
             name:"employeeRole",
@@ -63,14 +67,16 @@ const buildTeam = () => {
             addIntern(); 
         }
         if (Response.employeeRole === 'None'){
-            finishedTeam();
+            let roster = generateRoster(teamArray)
+            console.log("Please wait while we generate your team.");
+            writeFile(roster);
         }
     })
 }
 
 // If user selects Engineer option then user is prompted to fill Engineer Info
 const addEngineer = () => {
-    return inquirer.prompt ([
+    inquirer.prompt ([
         {
             type:"input",
             name:"name",
@@ -90,23 +96,17 @@ const addEngineer = () => {
             type:"input",
             name:"github",
             message:"Please enter your Engineer's GitHub handle."
-        },
-        {
-            type:"confirm",
-            name:"addMoreEmps",
-            message:"Would you like to add more member's to your team?",
-            default: false
         }
     ])
     .then(answers => {
         const engineerInfo = new Engineer(answers.name, answers.id, answers.email, answers.github);
         teamArray.push(engineerInfo);
         return buildTeam();
-    });
+    })
 
 }
 const addIntern = () => {
-    return inquirer.prompt ([
+    inquirer.prompt ([
         {
             type:"input",
             name:"name",
@@ -129,30 +129,25 @@ const addIntern = () => {
         }
     ])
     .then(answers => {
-        const internInfo = new Engineer(answers.name, answers.id, answers.email, answers.school);
+        const internInfo = new Intern(answers.name, answers.id, answers.email, answers.school);
         teamArray.push(internInfo);
         return buildTeam();
-    });
+    })
 
 }
 
 // After user is finished building team HTML is generated
-const finishedTeam = () => {
-    return inquirer.prompt ([
-        {
-            type:"confirm",
-            name:"readyTeam",
-            message:"Are you sure you have finished adding all your employees??",
-            default: false
-        }
-    ])
-    .then(answers => {
-        if(readyTeam) {
-            let roster = generateRoster(teamArray)
+
+
+const writeFile = roster => {
+    fs.writeFile('./dist/index.html', roster, err => {
+        if(err) {
+            console.log(err);
+        } else {
             console.log("You're team roster has been created! You can view the index.html file now.");
-            writeFile(roster);
         }
-    })
-}
+    });
+};
+
 
 init();
